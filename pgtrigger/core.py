@@ -355,6 +355,8 @@ class Trigger:
     func = None
     declare = None
     timing = None
+    sequence_name = None
+    sequence_last_idx_sql = None
 
     def __init__(
         self,
@@ -368,6 +370,8 @@ class Trigger:
         func=None,
         declare=None,
         timing=None,
+        sequence_name=None,
+        sequence_last_idx_sql=None,
     ):
         self.name = name or self.name
         self.level = level or self.level
@@ -378,6 +382,8 @@ class Trigger:
         self.func = func or self.func
         self.declare = declare or self.declare
         self.timing = timing or self.timing
+        self.sequence_name = sequence_name or self.sequence_name
+        self.sequence_last_idx_sql = sequence_last_idx_sql or self.sequence_last_idx_sql
 
         if not self.level or not isinstance(self.level, Level):
             raise ValueError(f'Invalid "level" attribute: {self.level}')
@@ -403,6 +409,15 @@ class Trigger:
         if not self.name:
             raise ValueError('Trigger must have "name" attribute')
 
+        if not isinstance(self.sequence_name, str):
+            raise ValueError(f'Invalid "sequence_name" attribute: {self.sequence_name}')
+        
+        if self.sequence_name and not self.sequence_last_idx_sql:
+            raise ValueError('Trigger must have a "sequence_last_idx_sql" attribute if "sequence_name" has been provided')
+        
+        if self.sequence_last_idx_sql and not isinstance(self.sequence_last_idx_sql, str):
+            raise ValueError(f'Invalid "sequence_last_idx_sql" attribute: {self.sequence_last_idx_sql}')
+        
         self.validate_name()
 
     def __str__(self):
@@ -524,6 +539,8 @@ class Trigger:
                 condition=self.render_condition(model),
                 execute=self.render_execute(model),
             ),
+            sequence_name=self.sequence_name,
+            sequence_last_idx_sql=self.sequence_last_idx_sql,
         )
 
     def allow_migrate(self, model, database=None):
