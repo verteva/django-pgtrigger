@@ -249,11 +249,13 @@ def _inject_m2m_dependency_in_proxy(proxy_op):
     proxy models. Inject the dependency here
     """
     for base in proxy_op.bases:
-        model = apps.get_model(base)
-        creator = model._meta.auto_created
+        if not hasattr(base, '_meta'):
+            # Ignore bases that aren't django models (mixins etc)
+            continue
+        creator = base._meta.auto_created
         if creator:
             for field in creator._meta.many_to_many:
-                if field.remote_field.through == model:
+                if field.remote_field.through == base:
                     app_label, model_name = creator._meta.label_lower.split(".")
                     proxy_op._auto_deps.append((app_label, model_name, field.name, True))
 
